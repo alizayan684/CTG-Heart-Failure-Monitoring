@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">
+
+QWidget {
+    background-color: #2E2E2E;
+    color: #FFFFFF;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+}
+
+
+QTableWidget {
+    background-color: #1E1E1E;
+    color: #FFFFFF;
+    gridline-color: #444444;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+}
+
+QTableWidget::item {
+    border: 1px solid #444444;
+    padding: 5px;
+}
+
+QTableWidget::item:selected {
+    background-color: #FF8C00; /* Bright orange for selected items */
+    color: #FFFFFF;
+}
+
+QHeaderView::section {
+    background-color: #3A3A3A;
+    color: #FFFFFF;
+    padding: 5px;
+    border: 1px solid #444444;
+}
+
+
+QPushButton {
+    background-color: #3A3A3A;
+    color: #FFFFFF;
+    border: 1px solid #FF8C00; /* Bright orange border */
+    border-radius: 5px;
+    padding: 5px 10px;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+}
+
+QPushButton:hover {
+    background-color: #FF8C00; /* Bright orange on hover */
+    color: #FFFFFF;
+}
+
+QPushButton:pressed {
+    background-color: #2A2A2A;
+    color: #FFFFFF;
+}
+
+
+
+</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="0">
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QPushButton" name="upload">
+          <property name="text">
+           <string>Upload</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="analyse">
+          <property name="text">
+           <string>Analyse</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="diagnose">
+          <property name="text">
+           <string>Diagnose</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="save">
+          <property name="text">
+           <string>Save</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QWidget" name="draw_widget" native="true"/>
+      </item>
+     </layout>
+    </item>
+    <item row="1" column="0">
+     <widget class="QTableWidget" name="table_widget">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
