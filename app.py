@@ -17,9 +17,17 @@ class App(UI):
         self.upload.clicked.connect(self.upload_data)
         self.analyse.clicked.connect(self.preprocess_data)
         self.diagnose.clicked.connect(self.diagnose_data)
+        self.save.clicked.connect(self.save_data)
         self.model = joblib.load('random_forest_model.pkl')
         
-    
+
+    def save_data(self):
+        if self.cleaned_data is not None:
+            options = QFileDialog.Options()
+            file_path, _ = QFileDialog.getSaveFileName(self, "Save Cleaned Data", "", "CSV Files (*.csv)", options=options)
+            if file_path:
+                self.cleaned_data.to_csv(file_path, index=False, header=True)
+
     def upload_data(self):
         options = QFileDialog.Options()
         file_path, _ = QFileDialog.getOpenFileName(self, "Open CTG CSV Data", "", "CSV Files (*.csv)", options=options)
@@ -136,7 +144,7 @@ class App(UI):
             report_data.append(row_data)
         self.table_widget.setRowCount(len(report_data)) 
         self.table_widget.setColumnCount(len(report_data[0]))
-        headers = ['Class', 'Precision', 'Recall', 'F1-Score', 'Support'] 
+        headers = ['Class', 'Precision','Support', 'Recall', 'F1-Score'] 
         self.table_widget.setHorizontalHeaderLabels(headers)
         self.table_widget.setVerticalHeaderLabels([str(i) for i in range(1, len(report_data)+1)])
         for i, row in enumerate(report_data): 
