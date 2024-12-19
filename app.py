@@ -4,6 +4,7 @@ import pandas as pd
 from PyQt5.QtWidgets import QTableWidgetItem
 import numpy as np
 from sklearn.preprocessing import StandardScaler
+from math import floor
 from sklearn.metrics import roc_curve, auc
 from sklearn.preprocessing import label_binarize
 from sklearn.metrics import classification_report
@@ -34,18 +35,16 @@ class App(UI):
 
         if file_path:
             self.data = pd.read_csv(file_path)
-            self.actual = self.data['fetal_health']
+            self.actual = floor(self.data['fetal_health'].mean())
             self.data.drop(columns=['fetal_health'], inplace=True)
-            data_summary = self.data.describe()
-            self.table_widget.setRowCount(data_summary.shape[0])
-            self.table_widget.setColumnCount(data_summary.shape[1])
-            self.table_widget.setHorizontalHeaderLabels(data_summary.columns)
+            data_summary = self.data['FHR'].describe()
+            print(data_summary)
+            self.table_widget.setRowCount(len(data_summary))
+            self.table_widget.setColumnCount(1)
+            self.table_widget.setHorizontalHeaderLabels(['value'])
             self.table_widget.setVerticalHeaderLabels(data_summary.index)
-            # set the labels size to fit the content
-            self.table_widget.resizeColumnsToContents()
-            for i in range(data_summary.shape[0]):
-                for j in range(data_summary.shape[1]):
-                    self.table_widget.setItem(i, j, QTableWidgetItem(str(data_summary.iloc[i, j])))
+            for i , (index, value) in enumerate(data_summary.items()):
+                self.table_widget.setItem(i, 0, QTableWidgetItem(str(value)))
             self.plot_data()
     def plot_data(self):
         self.draw_widget.figure.clear()
@@ -65,16 +64,15 @@ class App(UI):
         self.cleaned_data = self.data.copy()
         self.cleaned_data.insert(0, 'baseline value', fhr)
         # update the table
-        data_summary = self.cleaned_data.describe()
-        self.table_widget.setRowCount(data_summary.shape[0])
-        self.table_widget.setColumnCount(data_summary.shape[1])
-        self.table_widget.setHorizontalHeaderLabels(data_summary.columns)
+        data_summary = fhr.describe()
+        self.table_widget.setRowCount(len(data_summary))
+        self.table_widget.setColumnCount(1)
+        self.table_widget.setHorizontalHeaderLabels(['value'])
         self.table_widget.setVerticalHeaderLabels(data_summary.index)
         # set the labels size to fit the content
         self.table_widget.resizeColumnsToContents()
-        for i in range(data_summary.shape[0]):
-            for j in range(data_summary.shape[1]):
-                self.table_widget.setItem(i, j, QTableWidgetItem(str(data_summary.iloc[i, j])))
+        for i , (index, value) in enumerate(data_summary.items()):
+                self.table_widget.setItem(i, 0, QTableWidgetItem(str(value)))
         
         self.plot_spec_data(fhr)
 
@@ -128,41 +126,39 @@ class App(UI):
         X_scaled = scaler.fit_transform(X)
         col_names = list(X.columns)
         X_df = pd.DataFrame(X_scaled, columns=col_names)
-        # Predict
-        predictions = self.model.predict(X_df)
-        self.cleaned_data['fetal_health'] = predictions
-        # update the table with model performance and add column predictions, column actual value
-        # use classification report
-        report = classification_report(self.actual, predictions)
-        # update the table with the report data
-        report_data = [] 
-        lines = report.split('\n') 
-        for line in lines[2:-3]: 
-            row_data = line.split() 
-            if len(row_data) == 0: 
-                continue 
-            report_data.append(row_data)
-        self.table_widget.setRowCount(len(report_data)) 
-        self.table_widget.setColumnCount(len(report_data[0]))
-        headers = ['Class', 'Precision','Support', 'Recall', 'F1-Score'] 
-        self.table_widget.setHorizontalHeaderLabels(headers)
-        self.table_widget.setVerticalHeaderLabels([str(i) for i in range(1, len(report_data)+1)])
-        for i, row in enumerate(report_data): 
-            for j, item in enumerate(row): 
-                self.table_widget.setItem(i, j, QTableWidgetItem(item))
+        length = X_df.shape[0]
+        
+        for col in X_df.columns:
+             X_df[col] = [X_df[col][5]]*length
+        
 
-        self.plot_results()
+        predictions = self.model.predict(X_df)
+        print(predictions)
+        self.predictions = predictions.mean()
+        self.table_widget.setVerticalHeaderLabels(["predictions"])
+        self.table_widget.setHorizontalHeaderLabels(['value'])
+        if self.predictions == 1:
+                self.table_widget.setItem(0, 0, QTableWidgetItem("Normal"))
+        elif self.predictions == 2:
+                self.table_widget.setItem(0, 0, QTableWidgetItem("Suspect"))
+        else:
+                self.table_widget.setItem(0, 0, QTableWidgetItem("Pathological"))
 
     
     def plot_results(self):
         self.draw_widget.figure.clear()
         ax = self.draw_widget.figure.add_subplot(111)
         y_true = self.actual
-        y_pred = self.cleaned_data['fetal_health']
+
+        # Ensure y_true and y_prediction are arrays
+        if not isinstance(y_true, np.ndarray):
+            y_true = np.array([y_true])
+        if not isinstance(self.predictions, np.ndarray):
+            self.predictions = np.array([self.predictions])
 
         # Binarize the output labels
         y_true_binarized = label_binarize(y_true, classes=[1, 2, 3])
-        y_pred_binarized = label_binarize(y_pred, classes=[1, 2, 3])
+        y_pred_binarized = label_binarize(self.predictions, classes=[1, 2, 3])
 
         # Compute ROC curve and ROC area for each class
         fpr = dict()
@@ -171,23 +167,23 @@ class App(UI):
         for i in range(y_true_binarized.shape[1]):
             fpr[i], tpr[i], _ = roc_curve(y_true_binarized[:, i], y_pred_binarized[:, i])
             roc_auc[i] = auc(fpr[i], tpr[i])
-        
+
         # Plot ROC curve
         for i in range(y_true_binarized.shape[1]):
             if i + 1 == 1:
                 cl = "Normal"
-            elif i+1 == 2:
+            elif i + 1 == 2:
                 cl = "Suspect"
             else:
                 cl = "Pathological"
             ax.plot(fpr[i], tpr[i], label=f'ROC curve of class {i+1} : {cl} (area = {roc_auc[i]:.2f})')
-        
+
         ax.plot([0, 1], [0, 1], 'k--')
         ax.set_xlim([0.0, 1.0])
         ax.set_ylim([0.0, 1.05])
         ax.set_xlabel('False Positive Rate')
         ax.set_ylabel('True Positive Rate')
-        ax.legend(loc = 'lower right')
+        ax.legend(loc='lower right')
         self.draw_widget.draw()
 
 
